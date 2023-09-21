@@ -4,6 +4,9 @@ import seaborn as sns
 import numpy as npy
 import pandas as pd
 import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.metrics import accuracy_score
 
 #raw load github
 dataDefaulUrl = 'https://raw.githubusercontent.com/pipe2015/Projects_unad/main/data_csv';
@@ -18,18 +21,22 @@ class loadDataGraphics:
             ],
             'regresion_logistica_data': [
                 dataDefaulUrl + '/regresion-logistica.csv'
+            ],
+            'tree_desicion_data': [
+                dataDefaulUrl + '/tree-desicion.data'
             ]
         };
     
-    def get_data_csv(self, type = "regresion_lineal_data", index = 0, sep = ","): # default parameter type => '', index => 
+    def get_data_csv(self, type = "regresion_lineal_data", index = 0, **kwargs): # default parameter type => '', index => 
         self.loadIndex = index;
         try:
             if type in self.list_csv:
                 print(self.list_csv.get(type)[index]);
-                self.select_data = pd.read_csv(self.list_csv.get(type)[index], sep=sep);
+                self.select_data = pd.read_csv(self.list_csv.get(type)[index], **kwargs);
                 return self.select_data;
             raise Exception('list csv', 'Not found')
         except Exception as inst:
+            print('EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE')
             print(type(inst))
         except:
             print(f"Load csv not fount #{type} in #{index}");
@@ -50,8 +57,8 @@ class LinearProgresionData(loadDataGraphics):
         super().__init__()
         self.select_model = 'regresion_lineal_data';
         
-    def start(self):
-        data_select = self.get_data_csv(self.select_model, 0); 
+    def start(self, index = 0):
+        data_select = self.get_data_csv(self.select_model, index, sep=','); 
         
         # print Data view 
         self.viewData();
@@ -88,10 +95,10 @@ class LogisticProgresionData(loadDataGraphics):
         super().__init__()
         self.select_model = 'regresion_logistica_data';
     
-    def start(self): 
-        data_select = self.get_data_csv(self.select_model, 0);
+    def start(self, index = 0): 
+        data_select = self.get_data_csv(self.select_model, index, sep=',');
         
-        self.getRows();
+        print(self.getRows());
         
         data_comuns = self.getDatacolums(['BMI','currentSmoker']);
         
@@ -127,7 +134,52 @@ class LogisticProgresionData(loadDataGraphics):
         y = 1 / ( 1 + np.exp(-(w * x + b)));
         return {'x' : x, 'y' : y};
 
+
+
+class TreeDesicionData(loadDataGraphics): 
+    #init 
+    def __init__(self):
+        super().__init__()
+        self.select_model = 'tree_desicion_data';
+    
+    def start(self, index = 0): 
+        header = None;
+        names =  names = ["Class","Alcohol","Malic_acid", "Ash", "Alcalinity_of_ash", "Magnesium", "Total_phenols", "Flavonoids", "Nonflavanoid_phenols", "Proanthocyanins", "Color_intensity", "Hue", "OD280/OD315_of_diluted wines", "Proline"];
+        data_select = self.get_data_csv(self.select_model, index, header = header, names = names);
+        
+        print(self.getRows());
+        
+        print(data_select.describe());
+        
+        plot.hist(data_select.Class)
+        plot.show(); # open gui
+        
+        predictors_col = ["Alcohol","Malic_acid", "Ash", "Alcalinity_of_ash", "Magnesium", "Total_phenols", "Flavonoids", "Nonflavanoid_phenols", "Proanthocyanins", "Color_intensity", "Hue", "OD280/OD315_of_diluted wines", "Proline"]
+        target_col = ["Class"]
+        
+        #Se asignan según su clase respectiva "predictors" o "target"
+        predictors = data_select[predictors_col]
+        target = data_select[target_col]
+        
+        x_train, x_test, y_train, y_test = train_test_split(predictors, target, test_size=0.25, random_state=13)
+        
+        tree = DecisionTreeClassifier().fit(x_train, y_train);
+        
+        print(plot_tree(tree))
+        plot.show()
+        
+        #Evaluar predicciones tomando el porcentaje restante
+        predicciones = tree.predict(x_test)
+        
+        crosstab = pd.crosstab(np.array([y[0] for y in y_test.values.tolist()]), predicciones, rownames = ["Actual"], colnames = ["Predicciones"])
+        print(crosstab)
+        
+        #Porcentaje de precision comparada a informacion real
+        print(accuracy_score(y_test, predicciones))
+        
 print('///////////////////////////////////case 01///////////////////////////////////')    
 LinearProgresionData().start();
 print('\n///////////////////////////////////case 02///////////////////////////////////\n')
 LogisticProgresionData().start();
+print('\n///////////////////////////////////case 03///////////////////////////////////\n')
+TreeDesicionData().start();
