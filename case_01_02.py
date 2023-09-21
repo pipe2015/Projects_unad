@@ -3,9 +3,10 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 import seaborn as sns
 import numpy as npy
 import pandas as pd
+import numpy as np
 
 #raw load github
-dataDefaulUrl = 'https://raw.githubusercontent.com/pipe2015/Projects_unad/main/';
+dataDefaulUrl = 'https://raw.githubusercontent.com/pipe2015/Projects_unad/main/data_csv';
 
 class loadDataGraphics:
     def __init__(self):
@@ -13,10 +14,10 @@ class loadDataGraphics:
         self.loadIndex = -1;
         self.list_csv = {
             'regresion_lineal_data': [
-                dataDefaulUrl + 'cars.csv' 
+                dataDefaulUrl + '/regresion-lineal.csv' 
             ],
             'regresion_logistica_data': [
-                
+                dataDefaulUrl + '/regresion-logistica.csv'
             ]
         };
     
@@ -56,28 +57,27 @@ class LinearProgresionData(loadDataGraphics):
         self.viewData();
         
         # view Data Scatter 
-        self.loadGraphicsScatter(True, x="year", y='priceUSD');
+        self.loadGraphicsScatter(True, x="metro", y='precio');
         
         #Agrego los datos en un array
-        years_x = data_select['year'].values.reshape((-1, 1));
-        price_y = data_select['priceUSD'];
+        years_x = data_select['metro'].values.reshape((-1, 1));
+        price_y = data_select['precio'];
         #add create model
         model = LinearRegression().fit(years_x, price_y);
         
         print('interseccion (b)', model.intercept_)
-
         print('Pendiente (m)', model.coef_)
         
-        input_list = [[1980], [1990], [2000], [2010]]
+        input_list = [[5],[7],[10],[12],[20], [25]]
         predicciones = model.predict(input_list)
         print(predicciones)
         
         # view load Data Scatter 
-        self.loadGraphicsScatter(False, x="year", y="priceUSD", label='Datos originales');
+        self.loadGraphicsScatter(False, x="metro", y="precio", label='Datos originales');
         plot.scatter(input_list, predicciones, color='red')
         plot.plot(input_list, predicciones, color='black', label='Línea de regresión')
-        plot.xlabel('year')
-        plot.ylabel('priceUSD')
+        plot.xlabel('metro')
+        plot.ylabel('precio')
         plot.legend()
         plot.show()
     
@@ -93,6 +93,41 @@ class LogisticProgresionData(loadDataGraphics):
         
         self.getRows();
         
-        pass
-    
+        data_comuns = self.getDatacolums(['BMI','currentSmoker']);
+        
+        print(data_comuns.head()) # default 5 rows 
+        print(data_comuns.plot.scatter(x='BMI',y='currentSmoker'))
+        plot.show(); # open gui
+        
+        # delete rows diff empy values 
+        model_clear_data  = data_select.dropna();
+        print(model_clear_data.head())
+
+        # Agrego los datos en un array
+        x_model_cleaned = np.array(model_clear_data['BMI']).reshape((-1, 1))
+        y_model_cleaned = np.array(model_clear_data['currentSmoker'])
+
+        # create model
+        model = LogisticRegression().fit(x_model_cleaned, y_model_cleaned);
+        
+        print('interseccion (b)', model.intercept_)
+        print('Pendiente (m)', model.coef_)
+        
+        line_rect = self.get_line_rect(model_clear_data);
+        
+        # show graphics Data recta
+        data_select.plot.scatter(x='BMI',y='currentSmoker')
+        plot.plot(line_rect['x'], line_rect['y'], 'red')
+        plot.ylim(0, data_select['currentSmoker'].max() * 1.1)
+        # plt.grid()
+        plot.show()
+        
+    def get_line_rect(self, model_clear, w = -0.08, b = 2.08):
+        x = np.linspace(0, model_clear['BMI'].max(), 100);
+        y = 1 / ( 1 + np.exp(-(w * x + b)));
+        return {'x' : x, 'y' : y};
+
+print('///////////////////////////////////case 01///////////////////////////////////')    
 LinearProgresionData().start();
+print('\n///////////////////////////////////case 02///////////////////////////////////\n')
+LogisticProgresionData().start();
