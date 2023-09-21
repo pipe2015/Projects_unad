@@ -1,5 +1,5 @@
 # Projects_unad
-Programming analysis of data proejct
+Programming analysis of data project 
 
 ### install :
 
