@@ -82,13 +82,17 @@ class LinearProgresionData(loadDataGraphics):
         plot.show()
     
     
-class LinearProgresionData(loadDataGraphics): 
+class LogisticProgresionData(loadDataGraphics): 
     #init 
     def __init__(self):
         super().__init__()
-        self.select_model = 'regresion_lineal_data';
+        self.select_model = 'regresion_logistica_data';
     
     def start(self): 
+        data_select = self.get_data_csv(self.select_model, 0);
+        
+        self.getRows();
+        
         pass
     
 LinearProgresionData().start();
